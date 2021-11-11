@@ -12,11 +12,12 @@
   Therefore, their executions are not blocked by bad-behaving functions / tasks.
   This important feature is absolutely necessary for mission-critical tasks.
 
-  Version: 1.0.0
+  Version: 1.1.0
 
   Version Modified By   Date      Comments
   ------- -----------  ---------- -----------
   1.0.0   K.Hoang      29/09/2021 Initial coding for Arduino SAM_DUE
+  1.1.0   K Hoang      10/11/2021 Add functions to modify PWM settings on-the-fly
 *****************************************************************************************************************************/
 
 #pragma once
@@ -33,7 +34,7 @@
 #endif
 
 #ifndef SAMDUE_SLOW_PWM_VERSION
-  #define SAMDUE_SLOW_PWM_VERSION       F("SAMDUE_Slow_PWM v1.0.0")
+  #define SAMDUE_SLOW_PWM_VERSION       F("SAMDUE_Slow_PWM v1.1.0")
 #endif
 
 #ifndef _PWM_LOGLEVEL_
@@ -80,30 +81,61 @@ class SAMDUE_SLOW_PWM_ISR
     
     //////////////////////////////////////////////////////////////////
     // PWM
-    void setPWM(uint32_t pin, uint32_t frequency, uint32_t dutycycle, timer_callback StartCallback = nullptr,
+    // Return the channelNum if OK, -1 if error
+    int setPWM(uint32_t pin, double frequency, uint32_t dutycycle, timer_callback StartCallback = nullptr, 
                 timer_callback StopCallback = nullptr)
     {
       uint32_t period = 0;
-      
+
       if ( ( frequency != 0 ) && ( frequency <= 1000 ) )
       {
-      // period in us
-      period = 1000000.0f / frequency;
+        // period in us
+        period = 1000000.0f / frequency;
       }
       else
       {       
-        PWM_LOGERROR(F("Error: Invalid frequency, max is 1000Hz"));
+        PWM_LOGERROR("Error: Invalid frequency, max is 1000Hz");
+        
+        return -1;
       }
       
-      setupPWMChannel(pin, period, dutycycle, (void *) StartCallback, (void *) StopCallback);     
+      return setupPWMChannel(pin, period, dutycycle, (void *) StartCallback, (void *) StopCallback);   
     }
 
-    //period in us
-    void setPWM_Period(uint32_t pin, uint32_t period, uint32_t dutycycle, timer_callback StartCallback = nullptr,
-                       timer_callback StopCallback = nullptr)
+    // period in us
+    // Return the channelNum if OK, -1 if error
+    int setPWM_Period(uint32_t pin, uint32_t period, uint32_t dutycycle, timer_callback StartCallback = nullptr,
+                       timer_callback StopCallback = nullptr)  
     {     
-      setupPWMChannel(pin, period, dutycycle, (void *) StartCallback, (void *) StopCallback);       
-    }    
+      return setupPWMChannel(pin, period, dutycycle, (void *) StartCallback, (void *) StopCallback);      
+    } 
+    
+    //////////////////////////////////////////////////////////////////
+    
+    // low level function to modify a PWM channel
+    // returns the true on success or false on failure
+    bool modifyPWMChannel(unsigned channelNum, uint32_t pin, double frequency, uint32_t dutycycle)
+    {
+      uint32_t period = 0;
+      
+      if ( ( frequency > 0 ) && ( frequency <= 1000 ) )
+      {
+        // period in us
+        period = 1000000.0f / frequency;
+      }
+      else
+      {       
+        PWM_LOGERROR("Error: Invalid frequency, max is 1000Hz");
+        return false;
+      }
+      
+      return modifyPWMChannel_Period(channelNum, pin, period, dutycycle);
+    }
+    
+    //////////////////////////////////////////////////////////////////
+    
+    //period in us
+    bool modifyPWMChannel_Period(unsigned channelNum, uint32_t pin, uint32_t period, uint32_t dutycycle);
     
     //////////////////////////////////////////////////////////////////
 

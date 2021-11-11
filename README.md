@@ -27,14 +27,18 @@
   * [1. Init ISR_PWM](#1-init-ISR_PWM)
   * [2. Set PWM Frequency, dutycycle, attach irqCallbackStartFunc and irqCallbackStopFunc functions](#2-Set-PWM-Frequency-dutycycle-attach-irqCallbackStartFunc-and-irqCallbackStopFunc-functions)
 * [Examples](#examples)
-  * [  1. ISR_8_PWMs_Array](examples/ISR_8_PWMs_Array)
-  * [  2. ISR_8_PWMs_Array_Complex](examples/ISR_8_PWMs_Array_Complex)
-  * [  3. ISR_8_PWMs_Array_Simple](examples/ISR_8_PWMs_Array_Simple)
+  * [ 1. ISR_8_PWMs_Array](examples/ISR_8_PWMs_Array)
+  * [ 2. ISR_8_PWMs_Array_Complex](examples/ISR_8_PWMs_Array_Complex)
+  * [ 3. ISR_8_PWMs_Array_Simple](examples/ISR_8_PWMs_Array_Simple)
+  * [ 4. ISR_Changing_PWM](examples/ISR_Changing_PWM)
+  * [ 5. ISR_Modify_PWM](examples/ISR_Modify_PWM)
 * [Example ISR_8_PWMs_Array_Complex](#Example-ISR_8_PWMs_Array_Complex)
 * [Debug Terminal Output Samples](#debug-terminal-output-samples)
   * [1. ISR_8_PWMs_Array_Complex on SAM_DUE](#1-ISR_8_PWMs_Array_Complex-on-SAM_DUE)
   * [2. ISR_8_PWMs_Array on SAM_DUE](#2-isr_8_pwms_array-on-SAM_DUE)
   * [3. ISR_8_PWMs_Array_Simple on SAM_DUE](#3-ISR_8_PWMs_Array_Simple-on-SAM_DUE)
+  * [4. ISR_Modify_PWM on SAM_DUE](#4-ISR_Modify_PWM-on-SAM_DUE)
+  * [5. ISR_Changing_PWM on SAM_DUE](#5-ISR_Changing_PWM-on-SAM_DUE)
 * [Debug](#debug)
 * [Troubleshooting](#troubleshooting)
 * [Issues](#issues)
@@ -52,7 +56,7 @@
 
 ### Features
 
-This library enables you to use ISR-based PWM channels on **SAM_DUE** boards, using [`Arduino SAM core`](https://github.com/arduino/ArduinoCore-sam), to create and output PWM any GPIO pin. Because this library doesn't use the powerful purely hardware-controlled PWM with many limitations, the maximum PWM frequency is currently limited at **1000Hz**, which is still suitable for many real-life applications.
+This library enables you to use ISR-based PWM channels on **SAM_DUE** boards, using [`Arduino SAM core`](https://github.com/arduino/ArduinoCore-sam), to create and output PWM any GPIO pin. Because this library doesn't use the powerful purely hardware-controlled PWM with many limitations, the maximum PWM frequency is currently limited at **1000Hz**, which is still suitable for many real-life applications. Now you can also modify PWM settings on-the-fly.
 
 ---
 
@@ -97,7 +101,7 @@ The catch is **your function is now part of an ISR (Interrupt Service Routine), 
 
 ### Currently supported Boards
 
-1. ****SAM_DUE** boards**, using [`Arduino SAM core`](https://github.com/arduino/ArduinoCore-sam)
+1. **SAM_DUE** boards**, using [`Arduino SAM core`](https://github.com/arduino/ArduinoCore-sam)
 
 ---
 
@@ -236,7 +240,9 @@ void setup()
 
  1. [ISR_8_PWMs_Array](examples/ISR_8_PWMs_Array)
  2. [ISR_8_PWMs_Array_Complex](examples/ISR_8_PWMs_Array_Complex)
- 3. [ISR_8_PWMs_Array_Simple](examples/ISR_8_PWMs_Array_Simple) 
+ 3. [ISR_8_PWMs_Array_Simple](examples/ISR_8_PWMs_Array_Simple)
+ 4. [ISR_Changing_PWM](examples/ISR_Changing_PWM)
+ 5. [ISR_Modify_PWM](examples/ISR_Modify_PWM)
 
  
 ---
@@ -355,11 +361,10 @@ volatile unsigned long previousMicrosStart [NUMBER_ISR_PWMS] = { 0, 0, 0, 0, 0, 
 volatile unsigned long deltaMicrosStop     [NUMBER_ISR_PWMS] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 volatile unsigned long previousMicrosStop  [NUMBER_ISR_PWMS] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-
 // You can assign any interval for any timer here, in Hz
-uint32_t PWM_Freq[NUMBER_ISR_PWMS] =
+double PWM_Freq[NUMBER_ISR_PWMS] =
 {
-  1,  2,  3,  5,  10,  20,  30,  50
+  1.0f,  2.0f,  3.0f,  5.0f,  10.0f,  20.0f,  30.0f,  50.0f
 };
 
 // You can assign any duty-cycle for any PWM channel here, in %
@@ -678,8 +683,7 @@ The following is the sample terminal output when running example [ISR_8_PWMs_Arr
 
 ```
 Starting ISR_8_PWMs_Array_Complex on SAM_DUE
-SAMDUE_Slow_PWM v1.0.0
-CPU Frequency = 84 MHz
+SAMDUE_Slow_PWM v1.1.0
 Timer Frequency = 84 MHz
 [PWM] Using Timer( 0 ) = TC0
 [PWM] Channel = 0 , IRQ = TC0_IRQn
@@ -720,8 +724,7 @@ The following is the sample terminal output when running example [**ISR_8_PWMs_A
 
 ```
 Starting ISR_8_PWMs_Array on SAM_DUE
-SAMDUE_Slow_PWM v1.0.0
-CPU Frequency = 84 MHz
+SAMDUE_Slow_PWM v1.1.0
 Timer Frequency = 84 MHz
 [PWM] Using Timer( 0 ) = TC0
 [PWM] Channel = 0 , IRQ = TC0_IRQn
@@ -744,8 +747,7 @@ The following is the sample terminal output when running example [**ISR_8_PWMs_A
 
 ```
 Starting ISR_8_PWMs_Array_Simple on SAM_DUE
-SAMDUE_Slow_PWM v1.0.0
-CPU Frequency = 84 MHz
+SAMDUE_Slow_PWM v1.1.0
 Timer Frequency = 84 MHz
 [PWM] Using Timer( 0 ) = TC0
 [PWM] Channel = 0 , IRQ = TC0_IRQn
@@ -760,6 +762,58 @@ Channel : 6	Period : 33333		OnTime : 13333	Start_Time : 2009415
 Channel : 7	Period : 20000		OnTime : 9000	Start_Time : 2009415
 ```
 
+---
+
+### 4. ISR_Modify_PWM on SAM_DUE
+
+The following is the sample terminal output when running example [ISR_Modify_PWM](examples/ISR_Modify_PWM) on **SAM_DUE** to demonstrate how to modify PWM settings on-the-fly without deleting the PWM channel
+
+```
+Starting ISR_Modify_PWM on SAM_DUE
+SAMDUE_Slow_PWM v1.1.0
+CPU Frequency = 84 MHz
+Timer Frequency = 84 MHz
+[PWM] Using Timer( 0 ) = TC0
+[PWM] Channel = 0 , IRQ = TC0_IRQn
+ITimer attached to Timer(0)
+Using PWM Freq = 1.00, PWM DutyCycle = 10
+Channel : 0	Period : 1000000		OnTime : 100000	Start_Time : 2012463
+Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 12019042
+Channel : 0	Period : 1000000		OnTime : 100000	Start_Time : 22020042
+Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 32021042
+```
+
+---
+
+### 5. ISR_Changing_PWM on SAM_DUE
+
+The following is the sample terminal output when running example [ISR_Changing_PWM](examples/ISR_Changing_PWM) on **SAM_DUE** to demonstrate how to modify PWM settings on-the-fly by deleting the PWM channel and reinit the PWM channel
+
+```
+Starting ISR_Changing_PWM on SAM_DUE
+SAMDUE_Slow_PWM v1.1.0
+CPU Frequency = 84 MHz
+Timer Frequency = 84 MHz
+[PWM] Using Timer( 0 ) = TC0
+[PWM] Channel = 0 , IRQ = TC0_IRQn
+ITimer attached to Timer(0)
+Using PWM Freq = 1.00, PWM DutyCycle = 50
+Channel : 0	Period : 1000000		OnTime : 500000	Start_Time : 2012611
+Using PWM Freq = 2.00, PWM DutyCycle = 90
+Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 12018520
+Using PWM Freq = 1.00, PWM DutyCycle = 50
+Channel : 0	Period : 1000000		OnTime : 500000	Start_Time : 22019530
+Using PWM Freq = 2.00, PWM DutyCycle = 90
+Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 32020520
+Using PWM Freq = 1.00, PWM DutyCycle = 50
+Channel : 0	Period : 1000000		OnTime : 500000	Start_Time : 42021531
+Using PWM Freq = 2.00, PWM DutyCycle = 90
+Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 52022520
+Using PWM Freq = 1.00, PWM DutyCycle = 50
+Channel : 0	Period : 1000000		OnTime : 500000	Start_Time : 62023531
+Using PWM Freq = 2.00, PWM DutyCycle = 90
+Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 72024520
+```
 
 ---
 ---
@@ -804,6 +858,7 @@ Submit issues to: [SAMDUE_Slow_PWM issues](https://github.com/khoih-prog/SAMDUE_
 
 1. Basic hardware multi-channel PWM for **SAM_DUE**, etc. using [`Arduino SAM core`](https://github.com/arduino/ArduinoCore-sam)
 2. Add Table of Contents
+3. Add functions to modify PWM settings on-the-fly
 
 ---
 ---

@@ -11,12 +11,6 @@
   The accuracy is nearly perfect compared to software timers. The most important feature is they're ISR-based timers
   Therefore, their executions are not blocked by bad-behaving functions / tasks.
   This important feature is absolutely necessary for mission-critical tasks.
-
-  Version: 1.0.0
-
-  Version Modified By   Date      Comments
-  ------- -----------  ---------- -----------
-  1.0.0   K.Hoang      29/09/2021 Initial coding for Arduino SAM_DUE
 *****************************************************************************************************************************/
 
 #if !( defined(ARDUINO_SAM_DUE) || defined(__SAM3X8E__) )
@@ -26,9 +20,7 @@
 // These define's must be placed at the beginning before #include "ESP32_PWM.h"
 // _PWM_LOGLEVEL_ from 0 to 4
 // Don't define _PWM_LOGLEVEL_ > 0. Only for special ISR debugging only. Can hang the system.
-#define _PWM_LOGLEVEL_      3
-
-//#define USING_MICROS_RESOLUTION       true  //false 
+#define _PWM_LOGLEVEL_      4
 
 #include "SAMDUE_Slow_PWM.h"
 
@@ -87,11 +79,10 @@ uint32_t PWM_Pin[] =
 
 #define NUMBER_ISR_PWMS         ( sizeof(PWM_Pin) / sizeof(uint32_t) )
 
-
 // You can assign any interval for any timer here, in Hz
-uint32_t PWM_Freq[NUMBER_ISR_PWMS] =
+double PWM_Freq[NUMBER_ISR_PWMS] =
 {
-  1,  2,  3,  5,  10,  20,  30,  50
+  1.0f,  2.0f,  3.0f,  5.0f,  10.0f,  20.0f,  30.0f,  50.0f
 };
 
 // You can assign any duty-cycle for any PWM channel here, in %
