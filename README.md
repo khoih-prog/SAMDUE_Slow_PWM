@@ -54,6 +54,23 @@
 ---
 ---
 
+### Important Change from v1.2.0
+
+Please have a look at [HOWTO Fix `Multiple Definitions` Linker Error](#howto-fix-multiple-definitions-linker-error)
+
+As more complex calculation and check inside ISR are introduced from v1.2.0, there are consequences as follows
+
+- using min 30uS and max 8 PWM channels
+
+```
+// Don't change these numbers to make higher Timer freq. System can hang
+#define HW_TIMER_INTERVAL_US        30L
+#define HW_TIMER_INTERVAL_FREQ      33333L
+```
+
+You certainly can modify to use better values according to your board and use-case, just remember to test and reverse to conservative values if crash happens.
+
+
 ### Why do we need this [SAMDUE_Slow_PWM library](https://github.com/khoih-prog/SAMDUE_Slow_PWM)
 
 ### Features
