@@ -11,6 +11,7 @@
 
 ## Table of Contents
 
+* [Important Change from v1.2.0](#Important-Change-from-v120)
 * [Why do we need this SAMDUE_Slow_PWM library](#why-do-we-need-this-SAMDUE_Slow_PWM-library)
   * [Features](#features)
   * [Why using ISR-based PWM is better](#why-using-isr-based-pwm-is-better)
@@ -32,6 +33,7 @@
   * [ 3. ISR_8_PWMs_Array_Simple](examples/ISR_8_PWMs_Array_Simple)
   * [ 4. ISR_Changing_PWM](examples/ISR_Changing_PWM)
   * [ 5. ISR_Modify_PWM](examples/ISR_Modify_PWM)
+  * [ 6. multiFileProject](examples/multiFileProject) **New**
 * [Example ISR_8_PWMs_Array_Complex](#Example-ISR_8_PWMs_Array_Complex)
 * [Debug Terminal Output Samples](#debug-terminal-output-samples)
   * [1. ISR_8_PWMs_Array_Complex on SAM_DUE](#1-ISR_8_PWMs_Array_Complex-on-SAM_DUE)
@@ -116,11 +118,12 @@ The catch is **your function is now part of an ISR (Interrupt Service Routine), 
 
 ## Prerequisites
 
- 1. [`Arduino IDE 1.8.16+` for Arduino](https://www.arduino.cc/en/Main/Software)
+ 1. [`Arduino IDE 1.8.19+` for Arduino](https://github.com/arduino/Arduino). [![GitHub release](https://img.shields.io/github/release/arduino/Arduino.svg)](https://github.com/arduino/Arduino/releases/latest)
  2. [`Arduino SAM core v1.6.12+`](https://github.com/arduino/ArduinoCore-sam)
  
  3. To use with certain example
-   - [`SimpleTimer library`](https://github.com/jfturcot/SimpleTimer) for [ISR_8_PWMs_Array_Complex example](examples/ISR_8_PWMs_Array_Complex).
+   - [`SimpleTimer library`](https://github.com/jfturcot/SimpleTimer) to use with some examples.
+   
 ---
 ---
 
@@ -153,24 +156,25 @@ Another way to install is to:
 
 ### HOWTO Fix `Multiple Definitions` Linker Error
 
-The current library implementation, using **xyz-Impl.h instead of standard xyz.cpp**, possibly creates certain `Multiple Definitions` Linker error in certain use cases. Although it's simple to just modify several lines of code, either in the library or in the application, the library is adding 2 more source directories
+The current library implementation, using `xyz-Impl.h` instead of standard `xyz.cpp`, possibly creates certain `Multiple Definitions` Linker error in certain use cases.
 
-1. **scr_h** for new h-only files
-2. **src_cpp** for standard h/cpp files
+You can include this `.hpp` file
 
-besides the standard **src** directory.
+```
+// Can be included as many times as necessary, without `Multiple Definitions` Linker Error
+#include "SAMDUE_Slow_PWM.hpp"     //https://github.com/khoih-prog/SAMDUE_Slow_PWM
+```
 
-To use the **old standard cpp** way, locate this library' directory, then just 
+in many files. But be sure to use the following `.h` file **in just 1 `.h`, `.cpp` or `.ino` file**, which must **not be included in any other file**, to avoid `Multiple Definitions` Linker Error
 
-1. **Delete the all the files in src directory.**
-2. **Copy all the files in src_cpp directory into src.**
-3. Close then reopen the application code in Arduino IDE, etc. to recompile from scratch.
+```
+// To be included only in main(), .ino with setup() to avoid `Multiple Definitions` Linker Error
+#include "SAMDUE_Slow_PWM.h"           //https://github.com/khoih-prog/SAMDUE_Slow_PWM
+```
 
-To re-use the **new h-only** way, just 
+Check the new [**multiFileProject** example](examples/multiFileProject) for a `HOWTO` demo.
 
-1. **Delete the all the files in src directory.**
-2. **Copy the files in src_h directory into src.**
-3. Close then reopen the application code in Arduino IDE, etc. to recompile from scratch.
+Have a look at the discussion in [Different behaviour using the src_cpp or src_h lib #80](https://github.com/khoih-prog/ESPAsync_WiFiManager/discussions/80)
 
 ---
 ---
@@ -243,6 +247,7 @@ void setup()
  3. [ISR_8_PWMs_Array_Simple](examples/ISR_8_PWMs_Array_Simple)
  4. [ISR_Changing_PWM](examples/ISR_Changing_PWM)
  5. [ISR_Modify_PWM](examples/ISR_Modify_PWM)
+ 6. [multiFileProject](examples/multiFileProject). **New**
 
  
 ---
@@ -260,8 +265,10 @@ void setup()
 // Don't define _PWM_LOGLEVEL_ > 0. Only for special ISR debugging only. Can hang the system.
 #define _PWM_LOGLEVEL_      3
 
-//#define USING_MICROS_RESOLUTION       true  //false 
+// Default is true, uncomment to false
+//#define CHANGING_PWM_END_OF_CYCLE     false
 
+// To be included only in main(), .ino with setup() to avoid `Multiple Definitions` Linker Error
 #include "SAMDUE_Slow_PWM.h"
 
 #include <SimpleTimer.h>              // https://github.com/jfturcot/SimpleTimer
@@ -269,9 +276,9 @@ void setup()
 #define LED_OFF             HIGH
 #define LED_ON              LOW
 
-#ifndef LED_BUILTIN
-  #define LED_BUILTIN       13
-#endif
+//#ifndef LED_BUILTIN
+//  #define LED_BUILTIN       13
+//#endif
 
 #ifndef LED_BLUE
   #define LED_BLUE          2
@@ -284,8 +291,8 @@ void setup()
 #define USING_HW_TIMER_INTERVAL_MS        false   //true
 
 // Don't change these numbers to make higher Timer freq. System can hang
-#define HW_TIMER_INTERVAL_US        10L
-#define HW_TIMER_INTERVAL_FREQ      100000L
+#define HW_TIMER_INTERVAL_US        30L
+#define HW_TIMER_INTERVAL_FREQ      33333L
 
 volatile uint32_t startMicros = 0;
 
@@ -333,9 +340,9 @@ typedef struct
   irqCallback   irqCallbackStartFunc;
   irqCallback   irqCallbackStopFunc;
 
-  uint32_t      PWM_Freq;
+  double        PWM_Freq;
 
-  uint32_t      PWM_DutyCycle;
+  double        PWM_DutyCycle;
 
   uint32_t      deltaMicrosStart;
   uint32_t      previousMicrosStart;
@@ -355,22 +362,22 @@ void doingSomethingStop(int index);
 
 #else   // #if USE_COMPLEX_STRUCT
 
-volatile unsigned long deltaMicrosStart    [NUMBER_ISR_PWMS] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-volatile unsigned long previousMicrosStart [NUMBER_ISR_PWMS] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+volatile unsigned long deltaMicrosStart    [] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+volatile unsigned long previousMicrosStart [] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-volatile unsigned long deltaMicrosStop     [NUMBER_ISR_PWMS] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-volatile unsigned long previousMicrosStop  [NUMBER_ISR_PWMS] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+volatile unsigned long deltaMicrosStop     [] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+volatile unsigned long previousMicrosStop  [] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 // You can assign any interval for any timer here, in Hz
-double PWM_Freq[NUMBER_ISR_PWMS] =
+double PWM_Freq[] =
 {
   1.0f,  2.0f,  3.0f,  5.0f,  10.0f,  20.0f,  30.0f,  50.0f
 };
 
 // You can assign any duty-cycle for any PWM channel here, in %
-uint32_t PWM_DutyCycle[NUMBER_ISR_PWMS] =
+double PWM_DutyCycle[] =
 {
-  5, 10, 20, 25, 30, 35, 40, 45
+  5.0, 10.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0
 };
 
 void doingSomethingStart(int index)
@@ -484,17 +491,17 @@ void doingSomethingStop7()
 
 #if USE_COMPLEX_STRUCT
 
-ISR_PWM_Data curISR_PWM_Data[NUMBER_ISR_PWMS] =
+ISR_PWM_Data curISR_PWM_Data[] =
 {
   // pin, irqCallbackStartFunc, irqCallbackStopFunc, PWM_Freq, PWM_DutyCycle, deltaMicrosStart, previousMicrosStart, deltaMicrosStop, previousMicrosStop
-  { LED_BUILTIN,  doingSomethingStart0,    doingSomethingStop0,   1,   5, 0, 0, 0, 0 },
-  { PIN_22,       doingSomethingStart1,    doingSomethingStop1,   2,  10, 0, 0, 0, 0 },
-  { PIN_23,       doingSomethingStart2,    doingSomethingStop2,   3,  20, 0, 0, 0, 0 },
-  { PIN_24,       doingSomethingStart3,    doingSomethingStop3,   5,  25, 0, 0, 0, 0 },
-  { PIN_25,       doingSomethingStart4,    doingSomethingStop4,  10,  30, 0, 0, 0, 0 },
-  { PIN_26,       doingSomethingStart5,    doingSomethingStop5,  20,  35, 0, 0, 0, 0 },
-  { PIN_27,       doingSomethingStart6,    doingSomethingStop6,  30,  40, 0, 0, 0, 0 },
-  { PIN_28,       doingSomethingStart7,    doingSomethingStop7,  50,  45, 0, 0, 0, 0 },
+  { LED_BUILTIN,  doingSomethingStart0,    doingSomethingStop0,   1.0,   5.0, 0, 0, 0, 0 },
+  { PIN_22,       doingSomethingStart1,    doingSomethingStop1,   2.0,  10.0, 0, 0, 0, 0 },
+  { PIN_23,       doingSomethingStart2,    doingSomethingStop2,   3.0,  20.0, 0, 0, 0, 0 },
+  { PIN_24,       doingSomethingStart3,    doingSomethingStop3,   5.0,  25.0, 0, 0, 0, 0 },
+  { PIN_25,       doingSomethingStart4,    doingSomethingStop4,  10.0,  30.0, 0, 0, 0, 0 },
+  { PIN_26,       doingSomethingStart5,    doingSomethingStop5,  20.0,  35.0, 0, 0, 0, 0 },
+  { PIN_27,       doingSomethingStart6,    doingSomethingStop6,  30.0,  40.0, 0, 0, 0, 0 },
+  { PIN_28,       doingSomethingStart7,    doingSomethingStop7,  50.0,  45.0, 0, 0, 0, 0 },
 };
 
 
@@ -518,13 +525,13 @@ void doingSomethingStop(int index)
 
 #else   // #if USE_COMPLEX_STRUCT
 
-irqCallback irqCallbackStartFunc[NUMBER_ISR_PWMS] =
+irqCallback irqCallbackStartFunc[] =
 {
   doingSomethingStart0,  doingSomethingStart1,  doingSomethingStart2,  doingSomethingStart3,
   doingSomethingStart4,  doingSomethingStart5,  doingSomethingStart6,  doingSomethingStart7
 };
 
-irqCallback irqCallbackStopFunc[NUMBER_ISR_PWMS] =
+irqCallback irqCallbackStopFunc[] =
 {
   doingSomethingStop0,  doingSomethingStop1,  doingSomethingStop2,  doingSomethingStop3,
   doingSomethingStop4,  doingSomethingStop5,  doingSomethingStop6,  doingSomethingStop7
@@ -683,37 +690,38 @@ The following is the sample terminal output when running example [ISR_8_PWMs_Arr
 
 ```
 Starting ISR_8_PWMs_Array_Complex on SAM_DUE
-SAMDUE_Slow_PWM v1.1.0
+SAMDUE_Slow_PWM v1.2.0
+CPU Frequency = 84 MHz
 Timer Frequency = 84 MHz
 [PWM] Using Timer( 0 ) = TC0
 [PWM] Channel = 0 , IRQ = TC0_IRQn
 ITimer attached to Timer(0)
-Channel : 0	Period : 1000000		OnTime : 50000	Start_Time : 2009501
-Channel : 1	Period : 500000		OnTime : 50000	Start_Time : 2009501
-Channel : 2	Period : 333333		OnTime : 66666	Start_Time : 2009501
-Channel : 3	Period : 200000		OnTime : 50000	Start_Time : 2009501
-Channel : 4	Period : 100000		OnTime : 30000	Start_Time : 2009501
-Channel : 5	Period : 50000		OnTime : 17500	Start_Time : 2009501
-Channel : 6	Period : 33333		OnTime : 13333	Start_Time : 2009501
-Channel : 7	Period : 20000		OnTime : 9000	Start_Time : 2009501
-SimpleTimer (us): 2000, us : 12054051, Dus : 10044561
-PWM Channel : 0, prog Period (us): 1000000.00, actual : 1000000, prog DutyCycle : 5, actual : 5.00
-PWM Channel : 1, prog Period (us): 500000.00, actual : 500005, prog DutyCycle : 10, actual : 10.00
-PWM Channel : 2, prog Period (us): 333333.34, actual : 333340, prog DutyCycle : 20, actual : 20.00
-PWM Channel : 3, prog Period (us): 200000.00, actual : 200009, prog DutyCycle : 25, actual : 25.00
-PWM Channel : 4, prog Period (us): 100000.00, actual : 100012, prog DutyCycle : 30, actual : 29.98
-PWM Channel : 5, prog Period (us): 50000.00, actual : 49996, prog DutyCycle : 35, actual : 34.98
-PWM Channel : 6, prog Period (us): 33333.33, actual : 33340, prog DutyCycle : 40, actual : 39.98
-PWM Channel : 7, prog Period (us): 20000.00, actual : 20000, prog DutyCycle : 45, actual : 45.00
-SimpleTimer (us): 2000, us : 22116061, Dus : 10062010
-PWM Channel : 0, prog Period (us): 1000000.00, actual : 1000000, prog DutyCycle : 5, actual : 5.00
-PWM Channel : 1, prog Period (us): 500000.00, actual : 500005, prog DutyCycle : 10, actual : 10.00
-PWM Channel : 2, prog Period (us): 333333.34, actual : 333340, prog DutyCycle : 20, actual : 20.00
-PWM Channel : 3, prog Period (us): 200000.00, actual : 200009, prog DutyCycle : 25, actual : 25.00
-PWM Channel : 4, prog Period (us): 100000.00, actual : 99988, prog DutyCycle : 30, actual : 30.00
-PWM Channel : 5, prog Period (us): 50000.00, actual : 49992, prog DutyCycle : 35, actual : 34.99
-PWM Channel : 6, prog Period (us): 33333.33, actual : 33340, prog DutyCycle : 40, actual : 39.98
-PWM Channel : 7, prog Period (us): 20000.00, actual : 20000, prog DutyCycle : 45, actual : 45.00
+Channel : 0	    Period : 1000000.00		OnTime : 50000	Start_Time : 2009557
+Channel : 1	    Period : 500000.00		OnTime : 50000	Start_Time : 2015855
+Channel : 2	    Period : 333333.33		OnTime : 66666	Start_Time : 2022138
+Channel : 3	    Period : 200000.00		OnTime : 50000	Start_Time : 2028373
+Channel : 4	    Period : 100000.00		OnTime : 30000	Start_Time : 2034640
+Channel : 5	    Period : 50000.00		OnTime : 17500	Start_Time : 2040890
+Channel : 6	    Period : 33333.33		OnTime : 13333	Start_Time : 2047092
+Channel : 7	    Period : 20000.00		OnTime : 9000	Start_Time : 2053246
+SimpleTimer (us): 2000, us : 12059015, Dus : 10049537
+PWM Channel : 0, prog Period (us): 1000000.00, actual : 1000020, prog DutyCycle : 5.00, actual : 5.00
+PWM Channel : 1, prog Period (us): 500000.00, actual : 500008, prog DutyCycle : 10.00, actual : 10.00
+PWM Channel : 2, prog Period (us): 333333.33, actual : 333355, prog DutyCycle : 20.00, actual : 20.00
+PWM Channel : 3, prog Period (us): 200000.00, actual : 200003, prog DutyCycle : 25.00, actual : 24.99
+PWM Channel : 4, prog Period (us): 100000.00, actual : 100010, prog DutyCycle : 30.00, actual : 30.00
+PWM Channel : 5, prog Period (us): 50000.00, actual : 50022, prog DutyCycle : 35.00, actual : 34.97
+PWM Channel : 6, prog Period (us): 33333.33, actual : 33372, prog DutyCycle : 40.00, actual : 39.92
+PWM Channel : 7, prog Period (us): 20000.00, actual : 20015, prog DutyCycle : 45.00, actual : 44.99
+SimpleTimer (us): 2000, us : 22122203, Dus : 10063188
+PWM Channel : 0, prog Period (us): 1000000.00, actual : 1000020, prog DutyCycle : 5.00, actual : 5.00
+PWM Channel : 1, prog Period (us): 500000.00, actual : 500008, prog DutyCycle : 10.00, actual : 10.00
+PWM Channel : 2, prog Period (us): 333333.33, actual : 333355, prog DutyCycle : 20.00, actual : 20.00
+PWM Channel : 3, prog Period (us): 200000.00, actual : 200003, prog DutyCycle : 25.00, actual : 24.99
+PWM Channel : 4, prog Period (us): 100000.00, actual : 100030, prog DutyCycle : 30.00, actual : 30.00
+PWM Channel : 5, prog Period (us): 50000.00, actual : 50008, prog DutyCycle : 35.00, actual : 34.98
+PWM Channel : 6, prog Period (us): 33333.33, actual : 33357, prog DutyCycle : 40.00, actual : 39.95
+PWM Channel : 7, prog Period (us): 20000.00, actual : 20015, prog DutyCycle : 45.00, actual : 44.99
 ```
 
 ---
@@ -724,19 +732,20 @@ The following is the sample terminal output when running example [**ISR_8_PWMs_A
 
 ```
 Starting ISR_8_PWMs_Array on SAM_DUE
-SAMDUE_Slow_PWM v1.1.0
+SAMDUE_Slow_PWM v1.2.0
+CPU Frequency = 84 MHz
 Timer Frequency = 84 MHz
 [PWM] Using Timer( 0 ) = TC0
 [PWM] Channel = 0 , IRQ = TC0_IRQn
 ITimer attached to Timer(0)
-Channel : 0	Period : 1000000		OnTime : 50000	Start_Time : 2008810
-Channel : 1	Period : 500000		OnTime : 50000	Start_Time : 2008810
-Channel : 2	Period : 333333		OnTime : 66666	Start_Time : 2008810
-Channel : 3	Period : 200000		OnTime : 50000	Start_Time : 2008810
-Channel : 4	Period : 100000		OnTime : 30000	Start_Time : 2008810
-Channel : 5	Period : 50000		OnTime : 17500	Start_Time : 2008810
-Channel : 6	Period : 33333		OnTime : 13333	Start_Time : 2008810
-Channel : 7	Period : 20000		OnTime : 9000	Start_Time : 2008810
+Channel : 0	    Period : 1000000.00		OnTime : 50000	Start_Time : 2008866
+Channel : 1	    Period : 500000.00		OnTime : 50000	Start_Time : 2015169
+Channel : 2	    Period : 333333.33		OnTime : 66666	Start_Time : 2021450
+Channel : 3	    Period : 200000.00		OnTime : 50000	Start_Time : 2027687
+Channel : 4	    Period : 100000.00		OnTime : 30000	Start_Time : 2033954
+Channel : 5	    Period : 50000.00		OnTime : 17500	Start_Time : 2040204
+Channel : 6	    Period : 33333.33		OnTime : 13333	Start_Time : 2046403
+Channel : 7	    Period : 20000.00		OnTime : 9000	Start_Time : 2052559
 ```
 
 ---
@@ -747,19 +756,20 @@ The following is the sample terminal output when running example [**ISR_8_PWMs_A
 
 ```
 Starting ISR_8_PWMs_Array_Simple on SAM_DUE
-SAMDUE_Slow_PWM v1.1.0
+SAMDUE_Slow_PWM v1.2.0
+CPU Frequency = 84 MHz
 Timer Frequency = 84 MHz
 [PWM] Using Timer( 0 ) = TC0
 [PWM] Channel = 0 , IRQ = TC0_IRQn
 ITimer attached to Timer(0)
-Channel : 0	Period : 1000000		OnTime : 50000	Start_Time : 2009415
-Channel : 1	Period : 500000		OnTime : 50000	Start_Time : 2009415
-Channel : 2	Period : 333333		OnTime : 66666	Start_Time : 2009415
-Channel : 3	Period : 200000		OnTime : 50000	Start_Time : 2009415
-Channel : 4	Period : 100000		OnTime : 30000	Start_Time : 2009415
-Channel : 5	Period : 50000		OnTime : 17500	Start_Time : 2009415
-Channel : 6	Period : 33333		OnTime : 13333	Start_Time : 2009415
-Channel : 7	Period : 20000		OnTime : 9000	Start_Time : 2009415
+Channel : 0	    Period : 1000000.00		OnTime : 50000	Start_Time : 2009456
+Channel : 1	    Period : 500000.00		OnTime : 50000	Start_Time : 2015773
+Channel : 2	    Period : 333333.33		OnTime : 66666	Start_Time : 2022053
+Channel : 3	    Period : 200000.00		OnTime : 50000	Start_Time : 2028289
+Channel : 4	    Period : 100000.00		OnTime : 30000	Start_Time : 2034552
+Channel : 5	    Period : 50000.00		OnTime : 17500	Start_Time : 2040803
+Channel : 6	    Period : 33333.33		OnTime : 13333	Start_Time : 2047011
+Channel : 7	    Period : 20000.00		OnTime : 9000	Start_Time : 2053158
 ```
 
 ---
@@ -770,17 +780,18 @@ The following is the sample terminal output when running example [ISR_Modify_PWM
 
 ```
 Starting ISR_Modify_PWM on SAM_DUE
-SAMDUE_Slow_PWM v1.1.0
+SAMDUE_Slow_PWM v1.2.0
 CPU Frequency = 84 MHz
 Timer Frequency = 84 MHz
 [PWM] Using Timer( 0 ) = TC0
 [PWM] Channel = 0 , IRQ = TC0_IRQn
 ITimer attached to Timer(0)
-Using PWM Freq = 1.00, PWM DutyCycle = 10
-Channel : 0	Period : 1000000		OnTime : 100000	Start_Time : 2012463
-Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 12019042
-Channel : 0	Period : 1000000		OnTime : 100000	Start_Time : 22020042
-Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 32021042
+Using PWM Freq = 1.00, PWM DutyCycle = 10.00
+Channel : 0	    Period : 1000000.00		OnTime : 100000	Start_Time : 2012643
+Channel : 0	    Period : 500000.00		OnTime : 450000	Start_Time : 12020029
+Channel : 0	    Period : 1000000.00		OnTime : 100000	Start_Time : 22021029
+Channel : 0	    Period : 500000.00		OnTime : 450000	Start_Time : 32022029
+Channel : 0	    Period : 1000000.00		OnTime : 100000	Start_Time : 42023027
 ```
 
 ---
@@ -791,28 +802,22 @@ The following is the sample terminal output when running example [ISR_Changing_P
 
 ```
 Starting ISR_Changing_PWM on SAM_DUE
-SAMDUE_Slow_PWM v1.1.0
+SAMDUE_Slow_PWM v1.2.0
 CPU Frequency = 84 MHz
 Timer Frequency = 84 MHz
 [PWM] Using Timer( 0 ) = TC0
 [PWM] Channel = 0 , IRQ = TC0_IRQn
 ITimer attached to Timer(0)
-Using PWM Freq = 1.00, PWM DutyCycle = 50
-Channel : 0	Period : 1000000		OnTime : 500000	Start_Time : 2012611
-Using PWM Freq = 2.00, PWM DutyCycle = 90
-Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 12018520
-Using PWM Freq = 1.00, PWM DutyCycle = 50
-Channel : 0	Period : 1000000		OnTime : 500000	Start_Time : 22019530
-Using PWM Freq = 2.00, PWM DutyCycle = 90
-Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 32020520
-Using PWM Freq = 1.00, PWM DutyCycle = 50
-Channel : 0	Period : 1000000		OnTime : 500000	Start_Time : 42021531
-Using PWM Freq = 2.00, PWM DutyCycle = 90
-Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 52022520
-Using PWM Freq = 1.00, PWM DutyCycle = 50
-Channel : 0	Period : 1000000		OnTime : 500000	Start_Time : 62023531
-Using PWM Freq = 2.00, PWM DutyCycle = 90
-Channel : 0	Period : 500000		OnTime : 450000	Start_Time : 72024520
+Using PWM Freq = 1.00, PWM DutyCycle = 50.00
+Channel : 0	    Period : 1000000.00		OnTime : 500000	Start_Time : 2012803
+Using PWM Freq = 2.00, PWM DutyCycle = 90.00
+Channel : 0	    Period : 500000.00		OnTime : 450000	Start_Time : 12019301
+Using PWM Freq = 1.00, PWM DutyCycle = 50.00
+Channel : 0	    Period : 1000000.00		OnTime : 500000	Start_Time : 22019304
+Using PWM Freq = 2.00, PWM DutyCycle = 90.00
+Channel : 0	    Period : 500000.00		OnTime : 450000	Start_Time : 32019301
+Using PWM Freq = 1.00, PWM DutyCycle = 50.00
+Channel : 0	    Period : 1000000.00		OnTime : 500000	Start_Time : 42019304
 ```
 
 ---
@@ -859,6 +864,11 @@ Submit issues to: [SAMDUE_Slow_PWM issues](https://github.com/khoih-prog/SAMDUE_
 1. Basic hardware multi-channel PWM for **SAM_DUE**, etc. using [`Arduino SAM core`](https://github.com/arduino/ArduinoCore-sam)
 2. Add Table of Contents
 3. Add functions to modify PWM settings on-the-fly
+4. Fix `multiple-definitions` linker error. Drop `src_cpp` and `src_h` directories
+5. DutyCycle to be optionally updated at the end current PWM period instead of immediately.
+6. Add examples [multiFileProject](examples/multiFileProject) to demo for multiple-file project
+7. Improve accuracy by using `double`, instead of `uint32_t` for `dutycycle`, `period`.
+8. Optimize library code by using `reference-passing` instead of `value-passing`
 
 ---
 ---

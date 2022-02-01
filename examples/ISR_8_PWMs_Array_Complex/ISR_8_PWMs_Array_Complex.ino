@@ -22,6 +22,10 @@
 // Don't define _PWM_LOGLEVEL_ > 0. Only for special ISR debugging only. Can hang the system.
 #define _PWM_LOGLEVEL_      3
 
+// Default is true, uncomment to false
+//#define CHANGING_PWM_END_OF_CYCLE     false
+
+// To be included only in main(), .ino with setup() to avoid `Multiple Definitions` Linker Error
 #include "SAMDUE_Slow_PWM.h"
 
 #include <SimpleTimer.h>              // https://github.com/jfturcot/SimpleTimer
@@ -29,9 +33,9 @@
 #define LED_OFF             HIGH
 #define LED_ON              LOW
 
-#ifndef LED_BUILTIN
-  #define LED_BUILTIN       13
-#endif
+//#ifndef LED_BUILTIN
+//  #define LED_BUILTIN       13
+//#endif
 
 #ifndef LED_BLUE
   #define LED_BLUE          2
@@ -44,8 +48,8 @@
 #define USING_HW_TIMER_INTERVAL_MS        false   //true
 
 // Don't change these numbers to make higher Timer freq. System can hang
-#define HW_TIMER_INTERVAL_US        10L
-#define HW_TIMER_INTERVAL_FREQ      100000L
+#define HW_TIMER_INTERVAL_US        30L
+#define HW_TIMER_INTERVAL_FREQ      33333L
 
 volatile uint32_t startMicros = 0;
 
@@ -93,9 +97,9 @@ typedef struct
   irqCallback   irqCallbackStartFunc;
   irqCallback   irqCallbackStopFunc;
 
-  uint32_t      PWM_Freq;
+  double        PWM_Freq;
 
-  uint32_t      PWM_DutyCycle;
+  double        PWM_DutyCycle;
 
   uint32_t      deltaMicrosStart;
   uint32_t      previousMicrosStart;
@@ -115,22 +119,22 @@ void doingSomethingStop(int index);
 
 #else   // #if USE_COMPLEX_STRUCT
 
-volatile unsigned long deltaMicrosStart    [NUMBER_ISR_PWMS] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-volatile unsigned long previousMicrosStart [NUMBER_ISR_PWMS] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+volatile unsigned long deltaMicrosStart    [] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+volatile unsigned long previousMicrosStart [] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-volatile unsigned long deltaMicrosStop     [NUMBER_ISR_PWMS] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-volatile unsigned long previousMicrosStop  [NUMBER_ISR_PWMS] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+volatile unsigned long deltaMicrosStop     [] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+volatile unsigned long previousMicrosStop  [] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 // You can assign any interval for any timer here, in Hz
-double PWM_Freq[NUMBER_ISR_PWMS] =
+double PWM_Freq[] =
 {
   1.0f,  2.0f,  3.0f,  5.0f,  10.0f,  20.0f,  30.0f,  50.0f
 };
 
 // You can assign any duty-cycle for any PWM channel here, in %
-uint32_t PWM_DutyCycle[NUMBER_ISR_PWMS] =
+double PWM_DutyCycle[] =
 {
-  5, 10, 20, 25, 30, 35, 40, 45
+  5.0, 10.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0
 };
 
 void doingSomethingStart(int index)
@@ -244,17 +248,17 @@ void doingSomethingStop7()
 
 #if USE_COMPLEX_STRUCT
 
-ISR_PWM_Data curISR_PWM_Data[NUMBER_ISR_PWMS] =
+ISR_PWM_Data curISR_PWM_Data[] =
 {
   // pin, irqCallbackStartFunc, irqCallbackStopFunc, PWM_Freq, PWM_DutyCycle, deltaMicrosStart, previousMicrosStart, deltaMicrosStop, previousMicrosStop
-  { LED_BUILTIN,  doingSomethingStart0,    doingSomethingStop0,   1,   5, 0, 0, 0, 0 },
-  { PIN_22,       doingSomethingStart1,    doingSomethingStop1,   2,  10, 0, 0, 0, 0 },
-  { PIN_23,       doingSomethingStart2,    doingSomethingStop2,   3,  20, 0, 0, 0, 0 },
-  { PIN_24,       doingSomethingStart3,    doingSomethingStop3,   5,  25, 0, 0, 0, 0 },
-  { PIN_25,       doingSomethingStart4,    doingSomethingStop4,  10,  30, 0, 0, 0, 0 },
-  { PIN_26,       doingSomethingStart5,    doingSomethingStop5,  20,  35, 0, 0, 0, 0 },
-  { PIN_27,       doingSomethingStart6,    doingSomethingStop6,  30,  40, 0, 0, 0, 0 },
-  { PIN_28,       doingSomethingStart7,    doingSomethingStop7,  50,  45, 0, 0, 0, 0 },
+  { LED_BUILTIN,  doingSomethingStart0,    doingSomethingStop0,   1.0,   5.0, 0, 0, 0, 0 },
+  { PIN_22,       doingSomethingStart1,    doingSomethingStop1,   2.0,  10.0, 0, 0, 0, 0 },
+  { PIN_23,       doingSomethingStart2,    doingSomethingStop2,   3.0,  20.0, 0, 0, 0, 0 },
+  { PIN_24,       doingSomethingStart3,    doingSomethingStop3,   5.0,  25.0, 0, 0, 0, 0 },
+  { PIN_25,       doingSomethingStart4,    doingSomethingStop4,  10.0,  30.0, 0, 0, 0, 0 },
+  { PIN_26,       doingSomethingStart5,    doingSomethingStop5,  20.0,  35.0, 0, 0, 0, 0 },
+  { PIN_27,       doingSomethingStart6,    doingSomethingStop6,  30.0,  40.0, 0, 0, 0, 0 },
+  { PIN_28,       doingSomethingStart7,    doingSomethingStop7,  50.0,  45.0, 0, 0, 0, 0 },
 };
 
 
@@ -278,13 +282,13 @@ void doingSomethingStop(int index)
 
 #else   // #if USE_COMPLEX_STRUCT
 
-irqCallback irqCallbackStartFunc[NUMBER_ISR_PWMS] =
+irqCallback irqCallbackStartFunc[] =
 {
   doingSomethingStart0,  doingSomethingStart1,  doingSomethingStart2,  doingSomethingStart3,
   doingSomethingStart4,  doingSomethingStart5,  doingSomethingStart6,  doingSomethingStart7
 };
 
-irqCallback irqCallbackStopFunc[NUMBER_ISR_PWMS] =
+irqCallback irqCallbackStopFunc[] =
 {
   doingSomethingStop0,  doingSomethingStop1,  doingSomethingStop2,  doingSomethingStop3,
   doingSomethingStop4,  doingSomethingStop5,  doingSomethingStop6,  doingSomethingStop7

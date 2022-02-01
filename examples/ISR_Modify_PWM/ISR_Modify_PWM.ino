@@ -22,14 +22,18 @@
 // Don't define _PWM_LOGLEVEL_ > 0. Only for special ISR debugging only. Can hang the system.
 #define _PWM_LOGLEVEL_      3
 
+// Default is true, uncomment to false
+//#define CHANGING_PWM_END_OF_CYCLE     false
+
+// To be included only in main(), .ino with setup() to avoid `Multiple Definitions` Linker Error
 #include "SAMDUE_Slow_PWM.h"
 
 #define LED_OFF             HIGH
 #define LED_ON              LOW
 
-#ifndef LED_BUILTIN
-  #define LED_BUILTIN       13
-#endif
+//#ifndef LED_BUILTIN
+//  #define LED_BUILTIN       13
+//#endif
 
 #ifndef LED_BLUE
   #define LED_BLUE          2
@@ -42,8 +46,8 @@
 #define USING_HW_TIMER_INTERVAL_MS        false   //true
 
 // Don't change these numbers to make higher Timer freq. System can hang
-#define HW_TIMER_INTERVAL_US        10L
-#define HW_TIMER_INTERVAL_FREQ      100000L
+#define HW_TIMER_INTERVAL_US        20L
+#define HW_TIMER_INTERVAL_FREQ      50000L
 
 volatile uint32_t startMicros = 0;
 
@@ -72,14 +76,14 @@ double PWM_Freq1   = 1.0f;
 double PWM_Freq2   = 2.0f;
 
 // You can assign any interval for any timer here, in microseconds
-uint32_t PWM_Period1 = 1000000 / PWM_Freq1;
+double PWM_Period1 = 1000000.0 / PWM_Freq1;
 // You can assign any interval for any timer here, in microseconds
-uint32_t PWM_Period2 = 1000000 / PWM_Freq2;
+double PWM_Period2 = 1000000.0 / PWM_Freq2;
 
 // You can assign any duty_cycle for any PWM here, from 0-100
-uint32_t PWM_DutyCycle1  = 10;
+double PWM_DutyCycle1  = 10.0;
 // You can assign any duty_cycle for any PWM here, from 0-100
-uint32_t PWM_DutyCycle2  = 90;
+double PWM_DutyCycle2  = 90.0;
 
 // Channel number used to identify associated channel
 int channelNum;
@@ -134,7 +138,7 @@ void changePWM()
   static uint8_t count = 1;
 
   double PWM_Freq;
-  uint32_t PWM_DutyCycle;
+  double PWM_DutyCycle;
 
   if (count++ % 2)
   {
