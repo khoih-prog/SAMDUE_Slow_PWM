@@ -358,9 +358,9 @@ typedef struct
   irqCallback   irqCallbackStartFunc;
   irqCallback   irqCallbackStopFunc;
 
-  double        PWM_Freq;
+  float         PWM_Freq;
 
-  double        PWM_DutyCycle;
+  float         PWM_DutyCycle;
 
   uint32_t      deltaMicrosStart;
   uint32_t      previousMicrosStart;
