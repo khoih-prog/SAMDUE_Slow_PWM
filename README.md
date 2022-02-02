@@ -61,7 +61,7 @@ Please have a look at [HOWTO Fix `Multiple Definitions` Linker Error](#howto-fix
 As more complex calculation and check inside ISR are introduced from v1.2.0, there are consequences as follows
 
 - using min 30uS and max 8 PWM channels for v1.2.0
-- using min 20uS and max 8 PWM channels for v1.2.1
+- using min 20uS and max 8 PWM channels for v1.2.1+
 
 ```
 // Don't change these numbers to make higher Timer freq. System can hang
