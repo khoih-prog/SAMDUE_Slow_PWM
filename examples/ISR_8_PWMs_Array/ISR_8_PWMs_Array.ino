@@ -48,8 +48,8 @@
 #define USING_HW_TIMER_INTERVAL_MS        false   //true
 
 // Don't change these numbers to make higher Timer freq. System can hang
-#define HW_TIMER_INTERVAL_US        30L
-#define HW_TIMER_INTERVAL_FREQ      33333L
+#define HW_TIMER_INTERVAL_US        20L
+#define HW_TIMER_INTERVAL_FREQ      50000L
 
 volatile uint32_t startMicros = 0;
 
@@ -84,13 +84,13 @@ uint32_t PWM_Pin[] =
 #define NUMBER_ISR_PWMS         ( sizeof(PWM_Pin) / sizeof(uint32_t) )
 
 // You can assign any interval for any timer here, in Hz
-double PWM_Freq[] =
+float PWM_Freq[] =
 {
   1.0f,  2.0f,  3.0f,  5.0f,  10.0f,  20.0f,  30.0f,  50.0f
 };
 
 // You can assign any duty-cycle for any PWM channel here, in %
-double PWM_DutyCycle[] =
+float PWM_DutyCycle[] =
 {
   5.0, 10.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0
 };
@@ -177,7 +177,7 @@ void setup()
   // You can use up to 16 timer for each ISR_PWM
   for (uint16_t i = 0; i < NUMBER_ISR_PWMS; i++)
   {
-    //void setPWM(uint32_t pin, uint32_t frequency, uint32_t dutycycle
+    //void setPWM(uint32_t pin, float frequency, float dutycycle
     // , timer_callback_p StartCallback = nullptr, timer_callback_p StopCallback = nullptr)
 
     // You can use this with PWM_Freq in Hz

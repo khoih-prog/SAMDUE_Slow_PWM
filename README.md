@@ -60,12 +60,13 @@ Please have a look at [HOWTO Fix `Multiple Definitions` Linker Error](#howto-fix
 
 As more complex calculation and check inside ISR are introduced from v1.2.0, there are consequences as follows
 
-- using min 30uS and max 8 PWM channels
+- using min 30uS and max 8 PWM channels for v1.2.0
+- using min 20uS and max 8 PWM channels for v1.2.1
 
 ```
 // Don't change these numbers to make higher Timer freq. System can hang
 #define HW_TIMER_INTERVAL_US        30L
-#define HW_TIMER_INTERVAL_FREQ      33333L
+#define HW_TIMER_INTERVAL_FREQ      50000L
 ```
 
 You certainly can modify to use better values according to your board and use-case, just remember to test and reverse to conservative values if crash happens.
@@ -308,8 +309,8 @@ void setup()
 #define USING_HW_TIMER_INTERVAL_MS        false   //true
 
 // Don't change these numbers to make higher Timer freq. System can hang
-#define HW_TIMER_INTERVAL_US        30L
-#define HW_TIMER_INTERVAL_FREQ      33333L
+#define HW_TIMER_INTERVAL_US        20L
+#define HW_TIMER_INTERVAL_FREQ      50000L
 
 volatile uint32_t startMicros = 0;
 
@@ -386,13 +387,13 @@ volatile unsigned long deltaMicrosStop     [] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 volatile unsigned long previousMicrosStop  [] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 // You can assign any interval for any timer here, in Hz
-double PWM_Freq[] =
+float PWM_Freq[] =
 {
   1.0f,  2.0f,  3.0f,  5.0f,  10.0f,  20.0f,  30.0f,  50.0f
 };
 
 // You can assign any duty-cycle for any PWM channel here, in %
-double PWM_DutyCycle[] =
+float PWM_DutyCycle[] =
 {
   5.0, 10.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0
 };
@@ -583,7 +584,7 @@ void simpleTimerDoingSomething2s()
     Serial.print(F("PWM Channel : ")); Serial.print(i);
     Serial.print(F(", prog Period (us): "));
 
-    Serial.print(1000000.f / curISR_PWM_Data[i].PWM_Freq);
+    Serial.print(1000000 / curISR_PWM_Data[i].PWM_Freq);
 
     Serial.print(F(", actual : ")); Serial.print((uint32_t) curISR_PWM_Data[i].deltaMicrosStart);
 
@@ -660,7 +661,7 @@ void setup()
     curISR_PWM_Data[i].previousMicrosStart = startMicros;
     //ISR_PWM.setInterval(curISR_PWM_Data[i].PWM_Period, curISR_PWM_Data[i].irqCallbackStartFunc);
 
-    //void setPWM(uint32_t pin, uint32_t frequency, uint32_t dutycycle
+    //void setPWM(uint32_t pin, float frequency, float dutycycle
     // , timer_callback_p StartCallback = nullptr, timer_callback_p StopCallback = nullptr)
 
     // You can use this with PWM_Freq in Hz
@@ -707,38 +708,38 @@ The following is the sample terminal output when running example [ISR_8_PWMs_Arr
 
 ```
 Starting ISR_8_PWMs_Array_Complex on SAM_DUE
-SAMDUE_Slow_PWM v1.2.0
+SAMDUE_Slow_PWM v1.2.1
 CPU Frequency = 84 MHz
 Timer Frequency = 84 MHz
 [PWM] Using Timer( 0 ) = TC0
 [PWM] Channel = 0 , IRQ = TC0_IRQn
 ITimer attached to Timer(0)
-Channel : 0	    Period : 1000000.00		OnTime : 50000	Start_Time : 2009557
-Channel : 1	    Period : 500000.00		OnTime : 50000	Start_Time : 2015855
-Channel : 2	    Period : 333333.33		OnTime : 66666	Start_Time : 2022138
-Channel : 3	    Period : 200000.00		OnTime : 50000	Start_Time : 2028373
-Channel : 4	    Period : 100000.00		OnTime : 30000	Start_Time : 2034640
-Channel : 5	    Period : 50000.00		OnTime : 17500	Start_Time : 2040890
-Channel : 6	    Period : 33333.33		OnTime : 13333	Start_Time : 2047092
-Channel : 7	    Period : 20000.00		OnTime : 9000	Start_Time : 2053246
-SimpleTimer (us): 2000, us : 12059015, Dus : 10049537
-PWM Channel : 0, prog Period (us): 1000000.00, actual : 1000020, prog DutyCycle : 5.00, actual : 5.00
-PWM Channel : 1, prog Period (us): 500000.00, actual : 500008, prog DutyCycle : 10.00, actual : 10.00
-PWM Channel : 2, prog Period (us): 333333.33, actual : 333355, prog DutyCycle : 20.00, actual : 20.00
-PWM Channel : 3, prog Period (us): 200000.00, actual : 200003, prog DutyCycle : 25.00, actual : 24.99
-PWM Channel : 4, prog Period (us): 100000.00, actual : 100010, prog DutyCycle : 30.00, actual : 30.00
-PWM Channel : 5, prog Period (us): 50000.00, actual : 50022, prog DutyCycle : 35.00, actual : 34.97
-PWM Channel : 6, prog Period (us): 33333.33, actual : 33372, prog DutyCycle : 40.00, actual : 39.92
-PWM Channel : 7, prog Period (us): 20000.00, actual : 20015, prog DutyCycle : 45.00, actual : 44.99
-SimpleTimer (us): 2000, us : 22122203, Dus : 10063188
-PWM Channel : 0, prog Period (us): 1000000.00, actual : 1000020, prog DutyCycle : 5.00, actual : 5.00
-PWM Channel : 1, prog Period (us): 500000.00, actual : 500008, prog DutyCycle : 10.00, actual : 10.00
-PWM Channel : 2, prog Period (us): 333333.33, actual : 333355, prog DutyCycle : 20.00, actual : 20.00
-PWM Channel : 3, prog Period (us): 200000.00, actual : 200003, prog DutyCycle : 25.00, actual : 24.99
-PWM Channel : 4, prog Period (us): 100000.00, actual : 100030, prog DutyCycle : 30.00, actual : 30.00
-PWM Channel : 5, prog Period (us): 50000.00, actual : 50008, prog DutyCycle : 35.00, actual : 34.98
-PWM Channel : 6, prog Period (us): 33333.33, actual : 33357, prog DutyCycle : 40.00, actual : 39.95
-PWM Channel : 7, prog Period (us): 20000.00, actual : 20015, prog DutyCycle : 45.00, actual : 44.99
+Channel : 0	    Period : 1000000		OnTime : 50000	Start_Time : 2009552
+Channel : 1	    Period : 500000		OnTime : 50000	Start_Time : 2015589
+Channel : 2	    Period : 333333		OnTime : 66666	Start_Time : 2021600
+Channel : 3	    Period : 200000		OnTime : 50000	Start_Time : 2027591
+Channel : 4	    Period : 100000		OnTime : 30000	Start_Time : 2033591
+Channel : 5	    Period : 50000		OnTime : 17500	Start_Time : 2039592
+Channel : 6	    Period : 33333		OnTime : 13333	Start_Time : 2045521
+Channel : 7	    Period : 20000		OnTime : 9000	Start_Time : 2051429
+SimpleTimer (us): 2000, us : 12057006, Dus : 10047524
+PWM Channel : 0, prog Period (us): 1000000.00, actual : 1000000, prog DutyCycle : 5.00, actual : 5.00
+PWM Channel : 1, prog Period (us): 500000.00, actual : 500000, prog DutyCycle : 10.00, actual : 10.00
+PWM Channel : 2, prog Period (us): 333333.33, actual : 333339, prog DutyCycle : 20.00, actual : 20.00
+PWM Channel : 3, prog Period (us): 200000.00, actual : 199999, prog DutyCycle : 25.00, actual : 25.00
+PWM Channel : 4, prog Period (us): 100000.00, actual : 99999, prog DutyCycle : 30.00, actual : 30.00
+PWM Channel : 5, prog Period (us): 50000.00, actual : 50001, prog DutyCycle : 35.00, actual : 35.00
+PWM Channel : 6, prog Period (us): 33333.33, actual : 33341, prog DutyCycle : 40.00, actual : 39.95
+PWM Channel : 7, prog Period (us): 20000.00, actual : 20000, prog DutyCycle : 45.00, actual : 45.00
+SimpleTimer (us): 2000, us : 22120008, Dus : 10063002
+PWM Channel : 0, prog Period (us): 1000000.00, actual : 1000000, prog DutyCycle : 5.00, actual : 5.00
+PWM Channel : 1, prog Period (us): 500000.00, actual : 500000, prog DutyCycle : 10.00, actual : 10.00
+PWM Channel : 2, prog Period (us): 333333.33, actual : 333339, prog DutyCycle : 20.00, actual : 20.00
+PWM Channel : 3, prog Period (us): 200000.00, actual : 200000, prog DutyCycle : 25.00, actual : 25.00
+PWM Channel : 4, prog Period (us): 100000.00, actual : 100001, prog DutyCycle : 30.00, actual : 30.00
+PWM Channel : 5, prog Period (us): 50000.00, actual : 49999, prog DutyCycle : 35.00, actual : 35.00
+PWM Channel : 6, prog Period (us): 33333.33, actual : 33340, prog DutyCycle : 40.00, actual : 39.95
+PWM Channel : 7, prog Period (us): 20000.00, actual : 20001, prog DutyCycle : 45.00, actual : 45.00
 ```
 
 ---
@@ -749,20 +750,20 @@ The following is the sample terminal output when running example [**ISR_8_PWMs_A
 
 ```
 Starting ISR_8_PWMs_Array on SAM_DUE
-SAMDUE_Slow_PWM v1.2.0
+SAMDUE_Slow_PWM v1.2.1
 CPU Frequency = 84 MHz
 Timer Frequency = 84 MHz
 [PWM] Using Timer( 0 ) = TC0
 [PWM] Channel = 0 , IRQ = TC0_IRQn
 ITimer attached to Timer(0)
-Channel : 0	    Period : 1000000.00		OnTime : 50000	Start_Time : 2008866
-Channel : 1	    Period : 500000.00		OnTime : 50000	Start_Time : 2015169
-Channel : 2	    Period : 333333.33		OnTime : 66666	Start_Time : 2021450
-Channel : 3	    Period : 200000.00		OnTime : 50000	Start_Time : 2027687
-Channel : 4	    Period : 100000.00		OnTime : 30000	Start_Time : 2033954
-Channel : 5	    Period : 50000.00		OnTime : 17500	Start_Time : 2040204
-Channel : 6	    Period : 33333.33		OnTime : 13333	Start_Time : 2046403
-Channel : 7	    Period : 20000.00		OnTime : 9000	Start_Time : 2052559
+Channel : 0	    Period : 1000000		OnTime : 50000	Start_Time : 2008858
+Channel : 1	    Period : 500000		OnTime : 50000	Start_Time : 2014903
+Channel : 2	    Period : 333333		OnTime : 66666	Start_Time : 2020913
+Channel : 3	    Period : 200000		OnTime : 50000	Start_Time : 2026912
+Channel : 4	    Period : 100000		OnTime : 30000	Start_Time : 2032913
+Channel : 5	    Period : 50000		OnTime : 17500	Start_Time : 2038913
+Channel : 6	    Period : 33333		OnTime : 13333	Start_Time : 2044832
+Channel : 7	    Period : 20000		OnTime : 9000	Start_Time : 2050743
 ```
 
 ---
@@ -773,20 +774,20 @@ The following is the sample terminal output when running example [**ISR_8_PWMs_A
 
 ```
 Starting ISR_8_PWMs_Array_Simple on SAM_DUE
-SAMDUE_Slow_PWM v1.2.0
+SAMDUE_Slow_PWM v1.2.1
 CPU Frequency = 84 MHz
 Timer Frequency = 84 MHz
 [PWM] Using Timer( 0 ) = TC0
 [PWM] Channel = 0 , IRQ = TC0_IRQn
 ITimer attached to Timer(0)
-Channel : 0	    Period : 1000000.00		OnTime : 50000	Start_Time : 2009456
-Channel : 1	    Period : 500000.00		OnTime : 50000	Start_Time : 2015773
-Channel : 2	    Period : 333333.33		OnTime : 66666	Start_Time : 2022053
-Channel : 3	    Period : 200000.00		OnTime : 50000	Start_Time : 2028289
-Channel : 4	    Period : 100000.00		OnTime : 30000	Start_Time : 2034552
-Channel : 5	    Period : 50000.00		OnTime : 17500	Start_Time : 2040803
-Channel : 6	    Period : 33333.33		OnTime : 13333	Start_Time : 2047011
-Channel : 7	    Period : 20000.00		OnTime : 9000	Start_Time : 2053158
+Channel : 0	    Period : 1000000		OnTime : 50000	Start_Time : 2009460
+Channel : 1	    Period : 500000		OnTime : 50000	Start_Time : 2015503
+Channel : 2	    Period : 333333		OnTime : 66666	Start_Time : 2021514
+Channel : 3	    Period : 200000		OnTime : 50000	Start_Time : 2027505
+Channel : 4	    Period : 100000		OnTime : 30000	Start_Time : 2033505
+Channel : 5	    Period : 50000		OnTime : 17500	Start_Time : 2039514
+Channel : 6	    Period : 33333		OnTime : 13333	Start_Time : 2045434
+Channel : 7	    Period : 20000		OnTime : 9000	Start_Time : 2051343
 ```
 
 ---
@@ -797,18 +798,19 @@ The following is the sample terminal output when running example [ISR_Modify_PWM
 
 ```
 Starting ISR_Modify_PWM on SAM_DUE
-SAMDUE_Slow_PWM v1.2.0
+SAMDUE_Slow_PWM v1.2.1
 CPU Frequency = 84 MHz
 Timer Frequency = 84 MHz
 [PWM] Using Timer( 0 ) = TC0
 [PWM] Channel = 0 , IRQ = TC0_IRQn
 ITimer attached to Timer(0)
-Using PWM Freq = 1.00, PWM DutyCycle = 10.00
-Channel : 0	    Period : 1000000.00		OnTime : 100000	Start_Time : 2012643
-Channel : 0	    Period : 500000.00		OnTime : 450000	Start_Time : 12020029
-Channel : 0	    Period : 1000000.00		OnTime : 100000	Start_Time : 22021029
-Channel : 0	    Period : 500000.00		OnTime : 450000	Start_Time : 32022029
-Channel : 0	    Period : 1000000.00		OnTime : 100000	Start_Time : 42023027
+Using PWM Freq = 1.00, PWM DutyCycle = 50.00
+Channel : 0	    Period : 1000000		OnTime : 500000	Start_Time : 2012628
+Channel : 0	New Period : 500000		OnTime : 450000	Start_Time : 12012634
+Channel : 0	New Period : 1000000		OnTime : 500000	Start_Time : 22012634
+Channel : 0	New Period : 500000		OnTime : 450000	Start_Time : 31512634
+Channel : 0	New Period : 1000000		OnTime : 500000	Start_Time : 42012634
+Channel : 0	New Period : 500000		OnTime : 450000	Start_Time : 51512634
 ```
 
 ---
@@ -819,22 +821,22 @@ The following is the sample terminal output when running example [ISR_Changing_P
 
 ```
 Starting ISR_Changing_PWM on SAM_DUE
-SAMDUE_Slow_PWM v1.2.0
+SAMDUE_Slow_PWM v1.2.1
 CPU Frequency = 84 MHz
 Timer Frequency = 84 MHz
 [PWM] Using Timer( 0 ) = TC0
 [PWM] Channel = 0 , IRQ = TC0_IRQn
 ITimer attached to Timer(0)
 Using PWM Freq = 1.00, PWM DutyCycle = 50.00
-Channel : 0	    Period : 1000000.00		OnTime : 500000	Start_Time : 2012803
+Channel : 0	    Period : 1000000		OnTime : 500000	Start_Time : 2012800
 Using PWM Freq = 2.00, PWM DutyCycle = 90.00
-Channel : 0	    Period : 500000.00		OnTime : 450000	Start_Time : 12019301
+Channel : 0	    Period : 500000		OnTime : 450000	Start_Time : 12018300
 Using PWM Freq = 1.00, PWM DutyCycle = 50.00
-Channel : 0	    Period : 1000000.00		OnTime : 500000	Start_Time : 22019304
+Channel : 0	    Period : 1000000		OnTime : 500000	Start_Time : 22018303
 Using PWM Freq = 2.00, PWM DutyCycle = 90.00
-Channel : 0	    Period : 500000.00		OnTime : 450000	Start_Time : 32019301
+Channel : 0	    Period : 500000		OnTime : 450000	Start_Time : 32018301
 Using PWM Freq = 1.00, PWM DutyCycle = 50.00
-Channel : 0	    Period : 1000000.00		OnTime : 500000	Start_Time : 42019304
+Channel : 0	    Period : 1000000		OnTime : 500000	Start_Time : 42018304
 ```
 
 ---
@@ -884,7 +886,7 @@ Submit issues to: [SAMDUE_Slow_PWM issues](https://github.com/khoih-prog/SAMDUE_
 4. Fix `multiple-definitions` linker error. Drop `src_cpp` and `src_h` directories
 5. DutyCycle to be optionally updated at the end current PWM period instead of immediately.
 6. Add examples [multiFileProject](examples/multiFileProject) to demo for multiple-file project
-7. Improve accuracy by using `double`, instead of `uint32_t` for `dutycycle`, `period`.
+7. Improve accuracy by using `float`, instead of `uint32_t` for `dutycycle`
 8. Optimize library code by using `reference-passing` instead of `value-passing`
 
 ---

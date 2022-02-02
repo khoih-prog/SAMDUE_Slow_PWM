@@ -48,8 +48,8 @@
 #define USING_HW_TIMER_INTERVAL_MS        false   //true
 
 // Don't change these numbers to make higher Timer freq. System can hang
-#define HW_TIMER_INTERVAL_US        30L
-#define HW_TIMER_INTERVAL_FREQ      33333L
+#define HW_TIMER_INTERVAL_US        20L
+#define HW_TIMER_INTERVAL_FREQ      50000L
 
 volatile uint32_t startMicros = 0;
 
@@ -126,13 +126,13 @@ volatile unsigned long deltaMicrosStop     [] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 volatile unsigned long previousMicrosStop  [] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 // You can assign any interval for any timer here, in Hz
-double PWM_Freq[] =
+float PWM_Freq[] =
 {
   1.0f,  2.0f,  3.0f,  5.0f,  10.0f,  20.0f,  30.0f,  50.0f
 };
 
 // You can assign any duty-cycle for any PWM channel here, in %
-double PWM_DutyCycle[] =
+float PWM_DutyCycle[] =
 {
   5.0, 10.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0
 };
@@ -323,7 +323,7 @@ void simpleTimerDoingSomething2s()
     Serial.print(F("PWM Channel : ")); Serial.print(i);
     Serial.print(F(", prog Period (us): "));
 
-    Serial.print(1000000.f / curISR_PWM_Data[i].PWM_Freq);
+    Serial.print(1000000 / curISR_PWM_Data[i].PWM_Freq);
 
     Serial.print(F(", actual : ")); Serial.print((uint32_t) curISR_PWM_Data[i].deltaMicrosStart);
 
@@ -400,7 +400,7 @@ void setup()
     curISR_PWM_Data[i].previousMicrosStart = startMicros;
     //ISR_PWM.setInterval(curISR_PWM_Data[i].PWM_Period, curISR_PWM_Data[i].irqCallbackStartFunc);
 
-    //void setPWM(uint32_t pin, uint32_t frequency, uint32_t dutycycle
+    //void setPWM(uint32_t pin, float frequency, float dutycycle
     // , timer_callback_p StartCallback = nullptr, timer_callback_p StopCallback = nullptr)
 
     // You can use this with PWM_Freq in Hz

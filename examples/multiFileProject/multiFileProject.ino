@@ -13,8 +13,8 @@
   #error This is designed only for Arduino SAM_DUE board! Please check your Tools->Board setting.
 #endif
 
-#define SAMDUE_SLOW_PWM_VERSION_MIN_TARGET      F("SAMDUE_Slow_PWM v1.2.0")
-#define SAMDUE_SLOW_PWM_VERSION_MIN             1002000
+#define SAMDUE_SLOW_PWM_VERSION_MIN_TARGET      F("SAMDUE_Slow_PWM v1.2.1")
+#define SAMDUE_SLOW_PWM_VERSION_MIN             1002001
 
 #include "multiFileProject.h"
 

@@ -12,13 +12,14 @@
   Therefore, their executions are not blocked by bad-behaving functions / tasks.
   This important feature is absolutely necessary for mission-critical tasks.
 
-  Version: 1.2.0
+  Version: 1.2.1
 
   Version Modified By   Date      Comments
   ------- -----------  ---------- -----------
   1.0.0   K.Hoang      29/09/2021 Initial coding for Arduino SAM_DUE
   1.1.0   K Hoang      10/11/2021 Add functions to modify PWM settings on-the-fly
   1.2.0   K Hoang      31/01/2022 Fix multiple-definitions linker error. Improve accuracy. Change DutyCycle update
+  1.2.1   K Hoang      01/02/2022 Use float for DutyCycle and Freq, uint32_t for period. Optimize code
 *****************************************************************************************************************************/
 
 #pragma once
@@ -114,9 +115,9 @@ void SAMDUE_SLOW_PWM_ISR::run()
           SAM_DUE_PWM[channelNum].period    = SAM_DUE_PWM[channelNum].newPeriod;
           SAM_DUE_PWM[channelNum].newPeriod = 0;
           
-          SAM_DUE_PWM[channelNum].onTime  = ( SAM_DUE_PWM[channelNum].period * SAM_DUE_PWM[channelNum].newDutyCycle ) / 100;
+          SAM_DUE_PWM[channelNum].onTime  = SAM_DUE_PWM[channelNum].newOnTime;
         }
-#endif
+#endif        
       }      
     }
   }
@@ -152,12 +153,12 @@ int SAMDUE_SLOW_PWM_ISR::findFirstFreeSlot()
 
 ///////////////////////////////////////////////////
 
-int SAMDUE_SLOW_PWM_ISR::setupPWMChannel(const uint32_t& pin, const double& period, const double& dutycycle, void* cbStartFunc, void* cbStopFunc)
+int SAMDUE_SLOW_PWM_ISR::setupPWMChannel(const uint32_t& pin, const uint32_t& period, const float& dutycycle, void* cbStartFunc, void* cbStopFunc)
 {
   int channelNum;
   
   // Invalid input, such as period = 0, etc
-  if ( (period <= 0.0) || (dutycycle < 0.0) || (dutycycle > 100.0) )
+  if ( (period == 0) || (dutycycle < 0.0) || (dutycycle > 100.0) )
   {
     PWM_LOGERROR(F("Error: Invalid period or dutycycle"));
     return -1;
@@ -206,10 +207,10 @@ int SAMDUE_SLOW_PWM_ISR::setupPWMChannel(const uint32_t& pin, const double& peri
 
 ///////////////////////////////////////////////////
 
-bool SAMDUE_SLOW_PWM_ISR::modifyPWMChannel_Period(const uint8_t& channelNum, const uint32_t& pin, const double& period, const double& dutycycle)
+bool SAMDUE_SLOW_PWM_ISR::modifyPWMChannel_Period(const uint8_t& channelNum, const uint32_t& pin, const uint32_t& period, const float& dutycycle)
 {
   // Invalid input, such as period = 0, etc
-  if ( (period <= 0.0) || (dutycycle < 0.0) || (dutycycle > 100.0) )
+  if ( (period == 0) || (dutycycle < 0.0) || (dutycycle > 100.0) )
   {
     PWM_LOGERROR("Error: Invalid period or dutycycle");
     return false;
@@ -231,10 +232,11 @@ bool SAMDUE_SLOW_PWM_ISR::modifyPWMChannel_Period(const uint8_t& channelNum, con
 
   SAM_DUE_PWM[channelNum].newPeriod     = period;
   SAM_DUE_PWM[channelNum].newDutyCycle  = dutycycle;
+  SAM_DUE_PWM[channelNum].newOnTime     = ( period * dutycycle ) / 100;
   
   PWM_LOGINFO0("Channel : ");      PWM_LOGINFO0(channelNum); 
   PWM_LOGINFO0("\tNew Period : "); PWM_LOGINFO0(SAM_DUE_PWM[channelNum].newPeriod);
-  PWM_LOGINFO0("\t\tOnTime : ");   PWM_LOGINFO0(( period * dutycycle ) / 100); 
+  PWM_LOGINFO0("\t\tOnTime : ");   PWM_LOGINFO0(SAM_DUE_PWM[channelNum].newOnTime);
   PWM_LOGINFO0("\tStart_Time : "); PWM_LOGINFOLN0(SAM_DUE_PWM[channelNum].prevTime);
   
 #else  
