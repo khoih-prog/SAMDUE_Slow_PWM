@@ -12,7 +12,7 @@
   Therefore, their executions are not blocked by bad-behaving functions / tasks.
   This important feature is absolutely necessary for mission-critical tasks.
 
-  Version: 1.2.1
+  Version: 1.2.2
 
   Version Modified By   Date      Comments
   ------- -----------  ---------- -----------
@@ -20,6 +20,7 @@
   1.1.0   K Hoang      10/11/2021 Add functions to modify PWM settings on-the-fly
   1.2.0   K Hoang      31/01/2022 Fix multiple-definitions linker error. Improve accuracy. Change DutyCycle update
   1.2.1   K Hoang      01/02/2022 Use float for DutyCycle and Freq, uint32_t for period. Optimize code
+  1.2.2   K Hoang      04/03/2022 Fix `DutyCycle` and `New Period` display bugs. Display warning only when debug level > 3
 *****************************************************************************************************************************/
 
 #pragma once
@@ -40,13 +41,13 @@
 #endif
 
 #ifndef SAMDUE_SLOW_PWM_VERSION
-  #define SAMDUE_SLOW_PWM_VERSION           F("SAMDUE_Slow_PWM v1.2.1")
+  #define SAMDUE_SLOW_PWM_VERSION           F("SAMDUE_Slow_PWM v1.2.2")
   
   #define SAMDUE_SLOW_PWM_VERSION_MAJOR     1
   #define SAMDUE_SLOW_PWM_VERSION_MINOR     2
-  #define SAMDUE_SLOW_PWM_VERSION_PATCH     1
+  #define SAMDUE_SLOW_PWM_VERSION_PATCH     2
 
-  #define SAMDUE_SLOW_PWM_VERSION_INT       1002001
+  #define SAMDUE_SLOW_PWM_VERSION_INT       1002002
 #endif
 
 #ifndef _PWM_LOGLEVEL_
@@ -71,7 +72,10 @@
 #if USING_SERVO_LIB
 	// Arduino Servo library uses timers 0,2,3,4,5. 
   // You must have `#define USING_SERVO_LIB	true` in your sketch.
-	#warning Using Servo Library, Timer0, 2, 3, 4 and 5 not available
+  #if (_PWM_LOGLEVEL_ > 3)
+    #warning Using Servo Library, Timer0, 2, 3, 4 and 5 not available
+  #endif
+	
 #endif
 
 #if defined TC2

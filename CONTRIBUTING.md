@@ -29,7 +29,7 @@ Please ensure to specify the following:
 Arduino IDE version: 1.8.19
 Arduino SAMDUE Core Version 1.6.12
 OS: Ubuntu 20.04 LTS
-Linux xy-Inspiron-3593 5.4.0-96-generic #109-Ubuntu SMP Wed Jan 12 16:49:16 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux
+Linux xy-Inspiron-3593 5.4.0-100-generic #113-Ubuntu SMP Thu Feb 3 18:43:29 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux
 Context:
 I encountered a crash while trying to use the Timer Interrupt.
 
