@@ -236,7 +236,7 @@ bool SAMDUE_SLOW_PWM_ISR::modifyPWMChannel_Period(const uint8_t& channelNum, con
   SAM_DUE_PWM[channelNum].newOnTime     = ( period * dutycycle ) / 100;
   
   PWM_LOGINFO0("Channel : ");      PWM_LOGINFO0(channelNum); 
-  PWM_LOGINFO0("\tNew Period : "); PWM_LOGINFO0(SAM_DUE_PWM[channelNum].newPeriod);
+  PWM_LOGINFO0("\t    Period : "); PWM_LOGINFO0(period);
   PWM_LOGINFO0("\t\tOnTime : ");   PWM_LOGINFO0(SAM_DUE_PWM[channelNum].newOnTime);
   PWM_LOGINFO0("\tStart_Time : "); PWM_LOGINFOLN0(SAM_DUE_PWM[channelNum].prevTime);
   
