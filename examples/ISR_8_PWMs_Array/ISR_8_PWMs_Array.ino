@@ -5,7 +5,7 @@
 
   Built by Khoi Hoang https://github.com/khoih-prog/SAMDUE_Slow_PWM
   Licensed under MIT license
-  
+
   Now even you use all these new 16 ISR-based timers,with their maximum interval practically unlimited (limited only by
   unsigned long miliseconds), you just consume only one megaAVR-based timer and avoid conflicting with other cores' tasks.
   The accuracy is nearly perfect compared to software timers. The most important feature is they're ISR-based timers
@@ -59,7 +59,7 @@ SAMDUE_Slow_PWM ISR_PWM;
 //////////////////////////////////////////////////////
 
 void TimerHandler()
-{ 
+{
   ISR_PWM.run();
 }
 
@@ -137,7 +137,7 @@ void doingSomething7()
 
 irqCallback irqCallbackStartFunc[NUMBER_ISR_PWMS] =
 {
-  doingSomething0,  doingSomething1,  doingSomething2,  doingSomething3, 
+  doingSomething0,  doingSomething1,  doingSomething2,  doingSomething3,
   doingSomething4,  doingSomething5,  doingSomething6,  doingSomething7
 };
 
@@ -146,12 +146,15 @@ irqCallback irqCallbackStartFunc[NUMBER_ISR_PWMS] =
 uint16_t attachDueInterrupt(double microseconds, timerCallback callback, const char* TimerName)
 {
   DueTimerInterrupt dueTimerInterrupt = DueTimer.getAvailable();
-  
+
   dueTimerInterrupt.attachInterruptInterval(microseconds, callback);
 
   uint16_t timerNumber = dueTimerInterrupt.getTimerNumber();
-  
-  Serial.print(TimerName); Serial.print(F(" attached to Timer(")); Serial.print(timerNumber); Serial.println(F(")"));
+
+  Serial.print(TimerName);
+  Serial.print(F(" attached to Timer("));
+  Serial.print(timerNumber);
+  Serial.println(F(")"));
 
   return timerNumber;
 }
@@ -159,16 +162,22 @@ uint16_t attachDueInterrupt(double microseconds, timerCallback callback, const c
 ////////////////////////////////////////////////
 
 void setup()
-{ 
+{
   Serial.begin(115200);
+
   while (!Serial);
 
   delay(2000);
 
-  Serial.print(F("\nStarting ISR_8_PWMs_Array on ")); Serial.println(BOARD_NAME);
+  Serial.print(F("\nStarting ISR_8_PWMs_Array on "));
+  Serial.println(BOARD_NAME);
   Serial.println(SAMDUE_SLOW_PWM_VERSION);
-  Serial.print(F("CPU Frequency = ")); Serial.print(F_CPU / 1000000); Serial.println(F(" MHz"));
-  Serial.print(F("Timer Frequency = ")); Serial.print(SystemCoreClock / 1000000); Serial.println(F(" MHz"));
+  Serial.print(F("CPU Frequency = "));
+  Serial.print(F_CPU / 1000000);
+  Serial.println(F(" MHz"));
+  Serial.print(F("Timer Frequency = "));
+  Serial.print(SystemCoreClock / 1000000);
+  Serial.println(F(" MHz"));
 
   // Interval in microsecs
   attachDueInterrupt(HW_TIMER_INTERVAL_US, TimerHandler, "ITimer");

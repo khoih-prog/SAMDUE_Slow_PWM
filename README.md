@@ -6,8 +6,11 @@
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](#Contributing)
 [![GitHub issues](https://img.shields.io/github/issues/khoih-prog/SAMDUE_Slow_PWM.svg)](http://github.com/khoih-prog/SAMDUE_Slow_PWM/issues)
 
+
 <a href="https://www.buymeacoffee.com/khoihprog6" title="Donate to my libraries using BuyMeACoffee"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Donate to my libraries using BuyMeACoffee" style="height: 50px !important;width: 181px !important;" ></a>
 <a href="https://www.buymeacoffee.com/khoihprog6" title="Donate to my libraries using BuyMeACoffee"><img src="https://img.shields.io/badge/buy%20me%20a%20coffee-donate-orange.svg?logo=buy-me-a-coffee&logoColor=FFDD00" style="height: 20px !important;width: 200px !important;" ></a>
+<a href="https://profile-counter.glitch.me/khoih-prog/count.svg" title="Total khoih-prog Visitor count"><img src="https://profile-counter.glitch.me/khoih-prog/count.svg" style="height: 30px;width: 200px;"></a>
+<a href="https://profile-counter.glitch.me/khoih-prog-SAMDUE_Slow_PWM/count.svg" title="SAMDUE_Slow_PWM Visitor count"><img src="https://profile-counter.glitch.me/khoih-prog-SAMDUE_Slow_PWM/count.svg" style="height: 30px;width: 200px;"></a>
 
 ---
 ---
@@ -66,7 +69,7 @@ As more complex calculation and check inside ISR are introduced from v1.2.0, the
 - using min 30uS and max 8 PWM channels for v1.2.0
 - using min 20uS and max 8 PWM channels for v1.2.1+
 
-```
+```cpp
 // Don't change these numbers to make higher Timer freq. System can hang
 #define HW_TIMER_INTERVAL_US        30L
 #define HW_TIMER_INTERVAL_FREQ      50000L
@@ -141,7 +144,6 @@ The catch is **your function is now part of an ISR (Interrupt Service Routine), 
 
  1. [`Arduino IDE 1.8.19+` for Arduino](https://github.com/arduino/Arduino). [![GitHub release](https://img.shields.io/github/release/arduino/Arduino.svg)](https://github.com/arduino/Arduino/releases/latest)
  2. [`Arduino SAM core v1.6.12+`](https://github.com/arduino/ArduinoCore-sam)
- 
  3. To use with certain example
    - [`SimpleTimer library`](https://github.com/jfturcot/SimpleTimer) to use with some examples.
    
@@ -160,9 +162,9 @@ You can also use this link [![arduino-library-badge](https://www.ardu-badge.com/
 Another way to install is to:
 
 1. Navigate to [**SAMDUE_Slow_PWM**](https://github.com/khoih-prog/SAMDUE_Slow_PWM) page.
-2. Download the latest release `SAMDUE_Slow_PWM-master.zip`.
-3. Extract the zip file to `SAMDUE_Slow_PWM-master` directory 
-4. Copy whole `SAMDUE_Slow_PWM-master` folder to Arduino libraries' directory such as `~/Arduino/libraries/`.
+2. Download the latest release `SAMDUE_Slow_PWM-main.zip`.
+3. Extract the zip file to `SAMDUE_Slow_PWM-main` directory 
+4. Copy whole `SAMDUE_Slow_PWM-main` folder to Arduino libraries' directory such as `~/Arduino/libraries/`.
 
 ### VS Code & PlatformIO
 
@@ -181,14 +183,14 @@ The current library implementation, using `xyz-Impl.h` instead of standard `xyz.
 
 You can include this `.hpp` file
 
-```
+```cpp
 // Can be included as many times as necessary, without `Multiple Definitions` Linker Error
 #include "SAMDUE_Slow_PWM.hpp"     //https://github.com/khoih-prog/SAMDUE_Slow_PWM
 ```
 
 in many files. But be sure to use the following `.h` file **in just 1 `.h`, `.cpp` or `.ino` file**, which must **not be included in any other file**, to avoid `Multiple Definitions` Linker Error
 
-```
+```cpp
 // To be included only in main(), .ino with setup() to avoid `Multiple Definitions` Linker Error
 #include "SAMDUE_Slow_PWM.h"           //https://github.com/khoih-prog/SAMDUE_Slow_PWM
 ```
@@ -209,14 +211,14 @@ Before using any Timer, you have to make sure the Timer has not been used by any
 
 #### 1. Init ISR_PWM
 
-```
+```cpp
 // Init SAMDUE_Slow_PWM, each can service 16 different ISR-based PWM channels
 SAMDUE_Slow_PWM ISR_PWM;
 ```
 
 #### 2. Set PWM Frequency, dutycycle, attach irqCallbackStartFunc and irqCallbackStopFunc functions
 
-```
+```cpp
 void irqCallbackStartFunc()
 {
 
@@ -291,7 +293,7 @@ https://github.com/khoih-prog/SAMDUE_Slow_PWM/blob/4e96842d43eb6d20806706f436d13
 The following is the sample terminal output when running example [ISR_8_PWMs_Array_Complex](examples/ISR_8_PWMs_Array_Complex) to demonstrate how to use multiple PWM channels with complex callback functions, the accuracy of ISR Hardware PWM-channels, **especially when system is very busy**.  The ISR PWM-channels is **running exactly according to corresponding programmed periods and duty-cycles**
 
 
-```
+```cpp
 Starting ISR_8_PWMs_Array_Complex on SAM_DUE
 SAMDUE_Slow_PWM v1.2.2
 CPU Frequency = 84 MHz
@@ -333,7 +335,7 @@ PWM Channel : 7, prog Period (us): 20000.00, actual : 20001, prog DutyCycle : 45
 
 The following is the sample terminal output when running example [**ISR_8_PWMs_Array**](examples/ISR_8_PWMs_Array) on **SAM_DUE** to demonstrate how to use multiple PWM channels with simple callback functions.
 
-```
+```cpp
 Starting ISR_8_PWMs_Array on SAM_DUE
 SAMDUE_Slow_PWM v1.2.2
 CPU Frequency = 84 MHz
@@ -357,7 +359,7 @@ Channel : 7	    Period : 20000		OnTime : 9000	Start_Time : 2050743
 
 The following is the sample terminal output when running example [**ISR_8_PWMs_Array_Simple**](examples/ISR_8_PWMs_Array_Simple) on **SAM_DUE** to demonstrate how to use multiple PWM channels.
 
-```
+```cpp
 Starting ISR_8_PWMs_Array_Simple on SAM_DUE
 SAMDUE_Slow_PWM v1.2.2
 CPU Frequency = 84 MHz
@@ -381,7 +383,7 @@ Channel : 7	    Period : 20000		OnTime : 9000	Start_Time : 2051343
 
 The following is the sample terminal output when running example [ISR_Modify_PWM](examples/ISR_Modify_PWM) on **SAM_DUE** to demonstrate how to modify PWM settings on-the-fly without deleting the PWM channel
 
-```
+```cpp
 Starting ISR_Modify_PWM on SAM_DUE
 SAMDUE_Slow_PWM v1.2.2
 CPU Frequency = 84 MHz
@@ -416,7 +418,7 @@ Channel : 0	New Period : 10000		OnTime : 555	Start_Time : 172033234
 
 The following is the sample terminal output when running example [ISR_Changing_PWM](examples/ISR_Changing_PWM) on **SAM_DUE** to demonstrate how to modify PWM settings on-the-fly by deleting the PWM channel and reinit the PWM channel
 
-```
+```cpp
 Starting ISR_Changing_PWM on SAM_DUE
 SAMDUE_Slow_PWM v1.2.2
 CPU Frequency = 84 MHz
@@ -516,6 +518,6 @@ If you want to contribute to this project:
 
 ## Copyright
 
-Copyright 2021- Khoi Hoang
+Copyright (c) 2021- Khoi Hoang
 
 
